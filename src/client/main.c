@@ -135,6 +135,12 @@ int main(int argc, char* argv[]) {
     
     // Initialize client
     Client client;
+    
+    if (mode == SOCKET_MODE_UNIX && enable_tls) {
+        logger_warn("TLS requested for UNIX mode; disabling TLS because it is not required.");
+        enable_tls = 0;
+    }
+    
     if (client_init(&client, mode, address, enable_tls) < 0) {
         logger_error("Failed to initialize client");
         free(address);

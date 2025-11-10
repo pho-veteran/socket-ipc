@@ -269,6 +269,7 @@ void server_cleanup(Server* server) {
 
 static void setup_socket(Server* server) {
     if (server->mode == SOCKET_MODE_UNIX) {
+        logger_info("Initializing UNIX socket at %s", server->address);
         server->server_fd = setup_unix_socket(server->address);
     } else {
         uint16_t port = 8080;
@@ -277,6 +278,7 @@ static void setup_socket(Server* server) {
             logger_error("Failed to parse address");
             return;
         }
+        logger_info("Initializing INET socket host=%s port=%u", host, port);
         server->server_fd = setup_inet_socket(host, port);
         free(host);
     }
@@ -302,7 +304,11 @@ int server_start(Server* server, MessageHandler handler) {
     }
     
     server->running = 1;
-    logger_info("Server listening on %s", server->address);
+    if (server->mode == SOCKET_MODE_UNIX) {
+        logger_info("Server listening (UNIX) at path=%s", server->address);
+    } else {
+        logger_info("Server listening (INET) at address=%s", server->address);
+    }
     run_event_loop(server, handler);
     
     return 0;

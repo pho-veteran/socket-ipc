@@ -148,6 +148,21 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
+    if (mode == SOCKET_MODE_UNIX && enable_tls) {
+        logger_warn("TLS requested for UNIX mode; disabling TLS because it is not required.");
+        enable_tls = 0;
+    }
+    
+    if (mode == SOCKET_MODE_UNIX) {
+        logger_info("Server configuration: mode=unix, path=%s, tls=%s",
+                    address ? address : "(null)",
+                    enable_tls ? "enabled" : "disabled");
+    } else {
+        logger_info("Server configuration: mode=inet, address=%s, tls=%s",
+                    address ? address : "(null)",
+                    enable_tls ? "enabled" : "disabled");
+    }
+    
     // Initialize server
     if (server_init(&g_server, mode, address, enable_tls) < 0) {
         logger_error("Failed to initialize server");

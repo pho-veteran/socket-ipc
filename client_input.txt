@@ -1,5 +1,5 @@
-mode=inet
-address=localhost:8080
+mode=unix
+address=/tmp/server.sock
 tls=1
 free_input=0
 message=Hello World
