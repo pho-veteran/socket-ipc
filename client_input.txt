@@ -1,0 +1,7 @@
+mode=inet
+address=localhost:8080
+tls=1
+message=Hello World
+message=Test Message
+message=Another message
+message=Hello Teacher

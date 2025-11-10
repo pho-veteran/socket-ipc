@@ -1,0 +1,25 @@
+run_server
+run_client
+run_demo
+client_output.txt
+server_output.txt
+
+# Object and build artifacts
+**/*.o
+**/*.a
+**/*.so
+build/
+
+# Logs and temporary files
+*.log
+*.swp
+*~
+core
+
+# Demo/test artifacts
+test*.txt
+test*.bin
+
+# OS/editor junk
+.DS_Store
+
