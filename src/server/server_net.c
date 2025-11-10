@@ -100,12 +100,41 @@ void* init_tls_server(void) {
         return NULL;
     }
     
-    // Generate self-signed certificate for demo
-    EVP_PKEY* pkey = EVP_PKEY_new();
-    RSA* rsa = RSA_generate_key(2048, RSA_F4, NULL, NULL);
-    EVP_PKEY_assign_RSA(pkey, rsa);
+    // Generate self-signed certificate for demo (modern EVP API)
+    EVP_PKEY* pkey = NULL;
+    EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    if (!pctx) {
+        SSL_CTX_free(ctx);
+        logger_error("Failed to create EVP_PKEY_CTX");
+        return NULL;
+    }
+    if (EVP_PKEY_keygen_init(pctx) <= 0) {
+        EVP_PKEY_CTX_free(pctx);
+        SSL_CTX_free(ctx);
+        logger_error("EVP_PKEY_keygen_init failed");
+        return NULL;
+    }
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(pctx, 2048) <= 0) {
+        EVP_PKEY_CTX_free(pctx);
+        SSL_CTX_free(ctx);
+        logger_error("EVP_PKEY_CTX_set_rsa_keygen_bits failed");
+        return NULL;
+    }
+    if (EVP_PKEY_keygen(pctx, &pkey) <= 0) {
+        EVP_PKEY_CTX_free(pctx);
+        SSL_CTX_free(ctx);
+        logger_error("EVP_PKEY_keygen failed");
+        return NULL;
+    }
+    EVP_PKEY_CTX_free(pctx);
     
     X509* x509 = X509_new();
+    if (!x509) {
+        EVP_PKEY_free(pkey);
+        SSL_CTX_free(ctx);
+        logger_error("Failed to allocate X509");
+        return NULL;
+    }
     X509_set_version(x509, 2);
     ASN1_INTEGER_set(X509_get_serialNumber(x509), 1);
     X509_gmtime_adj(X509_get_notBefore(x509), 0);
@@ -116,10 +145,28 @@ void* init_tls_server(void) {
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, 
                                 (const unsigned char*)"localhost", -1, -1, 0);
     X509_set_issuer_name(x509, name);
-    X509_sign(x509, pkey, EVP_sha256());
+    if (!X509_sign(x509, pkey, EVP_sha256())) {
+        X509_free(x509);
+        EVP_PKEY_free(pkey);
+        SSL_CTX_free(ctx);
+        logger_error("X509_sign failed");
+        return NULL;
+    }
     
-    SSL_CTX_use_certificate(ctx, x509);
-    SSL_CTX_use_PrivateKey(ctx, pkey);
+    if (SSL_CTX_use_certificate(ctx, x509) != 1) {
+        X509_free(x509);
+        EVP_PKEY_free(pkey);
+        SSL_CTX_free(ctx);
+        logger_error("SSL_CTX_use_certificate failed");
+        return NULL;
+    }
+    if (SSL_CTX_use_PrivateKey(ctx, pkey) != 1) {
+        X509_free(x509);
+        EVP_PKEY_free(pkey);
+        SSL_CTX_free(ctx);
+        logger_error("SSL_CTX_use_PrivateKey failed");
+        return NULL;
+    }
     
     X509_free(x509);
     EVP_PKEY_free(pkey);

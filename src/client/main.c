@@ -17,7 +17,7 @@
 #define OUTPUT_FILE "client_output.txt"
 
 static int parse_config(const char* filename, SocketMode* mode, char** address, 
-                       int* enable_tls, char*** messages, size_t* message_count) {
+                       int* enable_tls, int* free_input, char*** messages, size_t* message_count) {
     FILE* f = fopen(filename, "r");
     if (!f) {
         fprintf(stderr, "Failed to open %s\n", filename);
@@ -28,6 +28,7 @@ static int parse_config(const char* filename, SocketMode* mode, char** address,
     *mode = SOCKET_MODE_INET;
     *address = NULL;
     *enable_tls = 0;
+    *free_input = 0;
     *messages = NULL;
     *message_count = 0;
     size_t message_capacity = 0;
@@ -60,6 +61,8 @@ static int parse_config(const char* filename, SocketMode* mode, char** address,
             *address = strdup(value);
         } else if (strcmp(key, "tls") == 0) {
             *enable_tls = (atoi(value) != 0);
+        } else if (strcmp(key, "free_input") == 0) {
+            *free_input = (atoi(value) != 0);
         } else if (strcmp(key, "message") == 0) {
             // Add message to list
             if (*message_count >= message_capacity) {
@@ -114,10 +117,11 @@ int main(int argc, char* argv[]) {
     SocketMode mode;
     char* address = NULL;
     int enable_tls = 0;
+    int free_input = 0;
     char** messages = NULL;
     size_t message_count = 0;
     
-    if (parse_config(INPUT_FILE, &mode, &address, &enable_tls, &messages, &message_count) < 0) {
+    if (parse_config(INPUT_FILE, &mode, &address, &enable_tls, &free_input, &messages, &message_count) < 0) {
         return 1;
     }
     
@@ -153,13 +157,36 @@ int main(int argc, char* argv[]) {
     
     logger_info("Connected successfully");
     
-    // Send messages
-    for (size_t i = 0; i < message_count; i++) {
-        logger_info("Sending message: %s", messages[i]);
-        if (client_send_text(&client, messages[i], strlen(messages[i])) < 0) {
-            logger_error("Failed to send message: %s", messages[i]);
-        } else {
-            logger_info("Message sent successfully: %s", messages[i]);
+    if (free_input) {
+        // Interactive mode: keep connection open and read from stdin
+        printf("Connected. Type messages to send (type 'quit' or 'exit' to close):\n");
+        char line[MAX_LINE_LEN];
+        while (fgets(line, sizeof(line), stdin)) {
+            // Remove newline
+            line[strcspn(line, "\n")] = '\0';
+            if (strcmp(line, "quit") == 0 || strcmp(line, "exit") == 0) {
+                break;
+            }
+            if (line[0] == '\0') {
+                continue;
+            }
+            logger_info("Sending message: %s", line);
+            if (client_send_text(&client, line, strlen(line)) < 0) {
+                logger_error("Failed to send message: %s", line);
+                // Continue allowing user to try again
+            } else {
+                logger_info("Message sent successfully: %s", line);
+            }
+        }
+    } else {
+        // Send messages from config
+        for (size_t i = 0; i < message_count; i++) {
+            logger_info("Sending message: %s", messages[i]);
+            if (client_send_text(&client, messages[i], strlen(messages[i])) < 0) {
+                logger_error("Failed to send message: %s", messages[i]);
+            } else {
+                logger_info("Message sent successfully: %s", messages[i]);
+            }
         }
     }
     
