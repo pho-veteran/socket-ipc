@@ -1,6 +1,5 @@
 run_server
 run_client
-run_demo
 client_output.txt
 server_output.txt
 

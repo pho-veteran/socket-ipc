@@ -37,10 +37,9 @@ sudo pacman -S base-devel openssl
 make
 ```
 
-This creates three executables at the project root:
+This creates two executables at the project root:
 - `run_server` – Server program
 - `run_client` – Client program
-- `run_demo` – Demo program
 
 ## Usage
 
@@ -129,13 +128,6 @@ Key-value pairs, one per line:
 
 The client writes connection status and send status to `client_output.txt`.
 
-### Demo
-
-The demo program simulates multiple clients connecting to a server:
-
-```bash
-./run_demo [--mode unix|inet] [--address ADDRESS] [--tls]
-```
 
 ## Examples
 

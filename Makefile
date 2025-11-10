@@ -28,22 +28,17 @@ SERVER_SOURCES = $(SERVER_DIR)/server.c \
 CLIENT_SOURCES = $(CLIENT_DIR)/client.c \
                  $(CLIENT_DIR)/client_net.c
 
-# Demo sources
-DEMO_SOURCES = $(DEMO_DIR)/demo_runner.c
-
 # Object files
 COMMON_OBJECTS = $(COMMON_SOURCES:.c=.o)
 SERVER_OBJECTS = $(SERVER_SOURCES:.c=.o)
 CLIENT_OBJECTS = $(CLIENT_SOURCES:.c=.o)
-DEMO_OBJECTS = $(DEMO_SOURCES:.c=.o)
 
 # Executables
 SERVER_TARGET = run_server
 CLIENT_TARGET = run_client
-DEMO_TARGET = run_demo
 
 # Default target
-all: $(SERVER_TARGET) $(CLIENT_TARGET) $(DEMO_TARGET)
+all: $(SERVER_TARGET) $(CLIENT_TARGET)
 
 # Server executable
 $(SERVER_TARGET): $(COMMON_OBJECTS) $(SERVER_OBJECTS) $(SERVER_DIR)/main.o
@@ -51,10 +46,6 @@ $(SERVER_TARGET): $(COMMON_OBJECTS) $(SERVER_OBJECTS) $(SERVER_DIR)/main.o
 
 # Client executable
 $(CLIENT_TARGET): $(COMMON_OBJECTS) $(CLIENT_OBJECTS) $(CLIENT_DIR)/main.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
-# Demo executable
-$(DEMO_TARGET): $(COMMON_OBJECTS) $(SERVER_OBJECTS) $(CLIENT_OBJECTS) $(DEMO_OBJECTS) $(DEMO_DIR)/main.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Common objects
@@ -69,15 +60,11 @@ $(SERVER_DIR)/%.o: $(SERVER_DIR)/%.c
 $(CLIENT_DIR)/%.o: $(CLIENT_DIR)/%.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-# Demo objects
-$(DEMO_DIR)/%.o: $(DEMO_DIR)/%.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
 # Clean
 clean:
-	rm -f $(COMMON_OBJECTS) $(SERVER_OBJECTS) $(CLIENT_OBJECTS) $(DEMO_OBJECTS)
-	rm -f $(SERVER_DIR)/main.o $(CLIENT_DIR)/main.o $(DEMO_DIR)/main.o
-	rm -f run_server run_client run_demo server client demo
+	rm -f $(COMMON_OBJECTS) $(SERVER_OBJECTS) $(CLIENT_OBJECTS)
+	rm -f $(SERVER_DIR)/main.o $(CLIENT_DIR)/main.o
+	rm -f run_server run_client server client demo run_demo
 	rm -f test*.txt test*.bin
 	rm -f server_output.txt client_output.txt
 	find . -name "*.o" -delete
