@@ -8,7 +8,6 @@ SRC_DIR = src
 COMMON_DIR = $(SRC_DIR)/common
 SERVER_DIR = $(SRC_DIR)/server
 CLIENT_DIR = $(SRC_DIR)/client
-DEMO_DIR = $(SRC_DIR)/demo
 
 # Include directories
 INCLUDES = -I$(SRC_DIR)
@@ -64,7 +63,7 @@ $(CLIENT_DIR)/%.o: $(CLIENT_DIR)/%.c
 clean:
 	rm -f $(COMMON_OBJECTS) $(SERVER_OBJECTS) $(CLIENT_OBJECTS)
 	rm -f $(SERVER_DIR)/main.o $(CLIENT_DIR)/main.o
-	rm -f run_server run_client server client demo run_demo
+	rm -f run_server run_client server client
 	rm -f test*.txt test*.bin
 	rm -f server_output.txt client_output.txt
 	find . -name "*.o" -delete

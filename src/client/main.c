@@ -125,8 +125,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    // Initialize logger with output file
-    if (logger_init(OUTPUT_FILE) < 0) {
+    // Initialize logger: use stdout for interactive mode, file for batch mode
+    const char* log_output = free_input ? NULL : OUTPUT_FILE;
+    if (logger_init(log_output) < 0) {
         fprintf(stderr, "Failed to initialize logger\n");
         free(address);
         free_messages(messages, message_count);
